@@ -1,0 +1,20 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v4.5.0
+_src_path: https://github.com/jupyterlab/extension-template
+author_email: konrad.jelen@gmail.com
+author_name: Stellars Henson
+create_claude_symlink: true
+create_gemini_symlink: false
+has_ai_rules: true
+has_binder: false
+has_settings: false
+kind: frontend-and-server
+labextension_name: jupyterlab_jump_to_definition_fix
+project_short_description: Jupyterlab fix disguised as extension to fix action 'jump
+    to definition' from notebook to the source file / definition within the context
+    of the notebook's kernel. Without the fix package would need to be installed in
+    the same environment as jupyterlab to allo jump to definition
+python_name: jupyterlab_jump_to_definition_fix
+repository: ''
+test: true
+
