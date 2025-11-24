@@ -9,6 +9,9 @@
 
 JupyterLab extension that fixes "jump to definition" functionality for notebooks using Jedi static analysis in the kernel environment. This allows jumping to source code definitions for packages installed in the notebook's kernel, even if those packages are not installed in JupyterLab's own environment.
 
+> [!WARNING]
+> This extension is a temporary fix until the [jupyterlab-lsp](https://github.com/jupyter-lsp/jupyterlab-lsp) project implements native support for kernel-aware jump-to-definition. Track the upstream issue: [jupyter-lsp/jupyterlab-lsp#1096](https://github.com/jupyter-lsp/jupyterlab-lsp/issues/1096). Once merged and released, this extension will be deprecated.
+
 ## The Problem
 
 JupyterLab's built-in LSP "jump to definition" only works for packages installed in the same Python environment as JupyterLab itself. Notebooks often run with kernels in different environments (conda envs, virtual envs, containers) where packages are actually installed, making the stock LSP functionality useless for kernel-installed packages.
