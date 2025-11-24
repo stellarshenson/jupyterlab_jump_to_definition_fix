@@ -273,6 +273,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       // Re-register with our logic
       app.commands.addCommand(stockLSPCommandId, {
         label: descriptor.label || 'Jump to definition',
+        icon: descriptor.icon,
         execute: async (args?: any) => {
           // Check if we're in a Python notebook
           const notebook = notebookTracker.currentWidget;
