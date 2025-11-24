@@ -36,16 +36,16 @@ The extension consists of frontend TypeScript code and backend Python code worki
 
 **Frontend Implementation** (`src/index.ts`):
 
-- **Command Registration** (lines 46-235): Creates `notebook:jump-to-definition-kernel` command that collects notebook context and executes Jedi analysis
-- **Cell Source Collection** (lines 94-119): Iterates through all notebook cells, concatenates code cell sources, and calculates absolute cursor position accounting for multi-cell structure. Jedi requires 1-based line numbers
-- **Kernel Execution** (lines 124-148): Sends Jedi introspection code to kernel via `kernel.requestExecute()`, captures stdout (JSON result) while filtering stderr (debug logs)
-- **Path Conversion** (lines 174-208): Gets kernel's CWD, calculates JupyterLab server root from notebook path, converts absolute filesystem paths to server-relative paths for `docManager.openOrReveal()`
-- **Stock LSP Override** (lines 247-322): Dynamically intercepts `lsp:jump-to-definition` command when it loads, preserves original icon and label, routes Python notebooks to Jedi implementation while delegating others to stock LSP
+- **Command Registration**: `app.commands.addCommand(commandId)` creates `notebook:jump-to-definition-kernel` command that collects notebook context and executes Jedi analysis
+- **Cell Source Collection**: Command execute function iterates through `notebook.content.widgets`, concatenates code cell sources, and calculates absolute cursor position accounting for multi-cell structure. Jedi requires 1-based line numbers
+- **Kernel Execution**: `kernel.requestExecute()` sends Jedi introspection code to kernel, `future.onIOPub` handler captures stdout (JSON result) while filtering stderr (debug logs)
+- **Path Conversion**: Secondary kernel execution gets CWD via `os.getcwd()`, calculates JupyterLab server root from notebook path, converts absolute filesystem paths to server-relative paths for `docManager.openOrReveal()`
+- **Stock LSP Override**: `overrideLSPCommand()` function dynamically intercepts `lsp:jump-to-definition` command when it loads, preserves original icon and label, routes Python notebooks to Jedi implementation while delegating others to stock LSP
 
 **Backend Implementation** (`jupyterlab_jump_to_definition_fix/routes.py`):
 
-- **Introspection Code Template** (lines 26-91): Provides Python code template executed in kernel environment that imports Jedi, creates `jedi.Project` with kernel's `sys.path`, runs `Script.goto()` with `follow_imports=True`, and returns JSON with file path and line number
-- **API Handler** (lines 15-24): Serves introspection code template to frontend via `/jupyterlab_jump_to_definition_fix/introspection-code` endpoint
+- **Introspection Code Template**: `IntrospectionCodeHandler.get()` method provides Python code template executed in kernel environment that imports Jedi, creates `jedi.Project` with kernel's `sys.path`, runs `Script.goto()` with `follow_imports=True`, and returns JSON with file path and line number
+- **API Handler**: Route registered at `/jupyterlab_jump_to_definition_fix/introspection-code` endpoint serves template to frontend
 
 **Key Implementation Components**:
 
