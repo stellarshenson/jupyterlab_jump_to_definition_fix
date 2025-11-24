@@ -2,7 +2,37 @@
 
 [![Github Actions Status](/workflows/Build/badge.svg)](/actions/workflows/build.yml)
 
-Jupyterlab fix disguised as extension to fix action 'jump to definition' from notebook to the source file / definition within the context of the notebook's kernel. Without the fix package would need to be installed in the same environment as jupyterlab to allo jump to definition
+JupyterLab extension that enables "jump to definition" functionality for notebooks using kernel-based introspection. This allows jumping to source code definitions for packages installed in the notebook's kernel environment, even if those packages are not installed in JupyterLab's own environment.
+
+## Problem Solved
+
+By default, JupyterLab's LSP-based "jump to definition" only works for packages installed in the same Python environment as JupyterLab itself. However, notebooks often run with kernels in different environments (conda envs, virtual envs, containers) where the actual packages are installed.
+
+This extension bridges that gap by:
+1. Executing introspection code directly in the notebook's kernel
+2. Using Python's `inspect` module to locate source files from the kernel's perspective
+3. Opening the discovered files in JupyterLab's editor
+
+## Features
+
+- **Kernel-aware introspection**: Finds definitions using the notebook kernel's Python environment
+- **Works with any Python kernel**: Automatically enabled for notebooks with Python kernels
+- **Keyboard shortcut**: Press `Ctrl+B` (or `Cmd+B` on Mac) to jump to definition - overrides built-in LSP
+- **Command palette**: Available as "Jump to Definition (Kernel Context)"
+- **Supports**: modules, classes, functions, methods, and nested attributes (e.g., `numpy.array`, `MyClass.method`)
+
+## Usage
+
+1. Open a Jupyter notebook with a Python kernel
+2. Place your cursor on or select a symbol (function name, class name, module attribute, etc.)
+3. Press `Ctrl+B` (or `Cmd+B` on Mac), or run "Jump to Definition (Kernel Context)" from the command palette
+4. The source file will open at the definition location
+
+**Examples of symbols you can jump to:**
+- Module: `numpy` or `pandas`
+- Function: `np.array`, `pd.DataFrame`
+- Method: `MyClass.my_method`
+- Nested attributes: `sklearn.ensemble.RandomForestClassifier`
 
 This extension is composed of a Python package named `jupyterlab_jump_to_definition_fix`
 for the server extension and a NPM package named `jupyterlab_jump_to_definition_fix`
@@ -11,6 +41,7 @@ for the frontend extension.
 ## Requirements
 
 - JupyterLab >= 4.0.0
+- Python kernel (IPython/ipykernel)
 
 ## Install
 
