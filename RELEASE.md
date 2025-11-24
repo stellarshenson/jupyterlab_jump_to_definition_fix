@@ -18,7 +18,13 @@ Bump the version using `hatch`. By default this will create a tag.
 See the docs on [hatch-nodejs-version](https://github.com/agoose77/hatch-nodejs-version#semver) for details.
 
 ```bash
-hatch version <new-version>
+hatch version 1.0.61
+```
+
+Update `package.json` version manually if needed:
+
+```bash
+npm version 1.0.61 --no-git-tag-version
 ```
 
 Make sure to clean up all the development files before building the package:
