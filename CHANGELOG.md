@@ -1,5 +1,9 @@
 # Changelog
 
+<!-- <START NEW CHANGELOG ENTRY> -->
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## v1.0.60
 
 - Comprehensive README with badges (GitHub Actions, npm, PyPI, PyPI downloads, JupyterLab 4, KOLOMOLO)
