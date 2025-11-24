@@ -31,22 +31,21 @@ const plugin: JupyterFrontEndPlugin<void> = {
       '[JumpToDef] Extension jupyterlab_jump_to_definition_fix is activated!'
     );
 
-    // Test server extension
-    requestAPI<any>('hello')
-      .then(data => {
-        console.log('[JumpToDef] Server extension test successful:', data);
-      })
-      .catch(reason => {
-        console.error(
-          '[JumpToDef] The server extension appears to be missing:',
-          reason
-        );
-      });
+    // Test server extension (silent check)
+    requestAPI<any>('hello').catch(reason => {
+      console.error(
+        '[JumpToDef] The server extension appears to be missing:',
+        reason
+      );
+    });
 
-    // Add command for jumping to definition using Jedi in kernel
+    // Store reference to stock LSP command ID
+    const stockLSPCommandId = 'lsp:jump-to-definition';
+
+    // Add our command for jumping to definition using Jedi in kernel
     const commandId = 'notebook:jump-to-definition-kernel';
     app.commands.addCommand(commandId, {
-      label: 'Jump to Definition (Kernel Context)',
+      label: 'Jump to definition',
       caption:
         'Jump to the definition of the selected symbol using Jedi in kernel environment',
       execute: async () => {
@@ -235,21 +234,91 @@ const plugin: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    // Add to command palette
-    if (palette) {
-      palette.addItem({
-        command: commandId,
-        category: 'Notebook'
-      });
-    }
+    // Don't add to command palette - we're replacing the stock LSP command
+    // which is already in the palette
 
     // Bind keyboard shortcut (Ctrl+B or Cmd+B) for notebooks
-    // This takes precedence over the built-in lsp:jump-to-definition
     app.commands.addKeyBinding({
       command: commandId,
       keys: ['Accel B'],
       selector: '.jp-Notebook.jp-mod-editMode'
     });
+
+    // Track if we've already overridden the LSP command
+    let lspCommandOverridden = false;
+
+    // Override the stock LSP command when it becomes available
+    const overrideLSPCommand = () => {
+      if (lspCommandOverridden) {
+        return; // Already overridden, don't do it again
+      }
+
+      if (!app.commands.hasCommand(stockLSPCommandId)) {
+        return; // LSP command not available yet
+      }
+
+      // Get the stock command descriptor
+      const descriptor = (app.commands as any)._commands.get(stockLSPCommandId);
+      if (!descriptor) {
+        return;
+      }
+
+      // Mark as overridden before we start to prevent re-entry
+      lspCommandOverridden = true;
+
+      // Remove the stock command
+      (app.commands as any)._commands.delete(stockLSPCommandId);
+      (app.commands as any)._commandChanged.emit({ id: stockLSPCommandId, type: 'removed' });
+
+      // Re-register with our logic
+      app.commands.addCommand(stockLSPCommandId, {
+        label: descriptor.label || 'Jump to definition',
+        execute: async (args?: any) => {
+          // Check if we're in a Python notebook
+          const notebook = notebookTracker.currentWidget;
+          if (notebook &&
+              notebook.sessionContext.session?.kernel &&
+              (notebook.sessionContext.kernelDisplayName === 'Python 3 (ipykernel)' ||
+               notebook.sessionContext.kernelDisplayName?.includes('Python'))) {
+            // Use our Jedi-based implementation
+            return app.commands.execute(commandId);
+          } else {
+            // Delegate to original LSP implementation
+            if (descriptor.execute) {
+              return descriptor.execute.call(this, args);
+            }
+          }
+        },
+        isEnabled: () => {
+          const notebook = notebookTracker.currentWidget;
+          if (notebook &&
+              notebook.sessionContext.session?.kernel &&
+              (notebook.sessionContext.kernelDisplayName === 'Python 3 (ipykernel)' ||
+               notebook.sessionContext.kernelDisplayName?.includes('Python'))) {
+            // Use our isEnabled logic
+            return true;
+          } else {
+            // Delegate to original LSP isEnabled
+            if (descriptor.isEnabled) {
+              return descriptor.isEnabled.call(this);
+            }
+            return false;
+          }
+        }
+      });
+    };
+
+    // Try immediately
+    overrideLSPCommand();
+
+    // Also listen for command changes in case LSP loads later
+    if (!app.commands.hasCommand(stockLSPCommandId)) {
+      (app.commands as any).commandChanged.connect((sender: any, args: any) => {
+        if (args.id === stockLSPCommandId && args.type === 'added') {
+          overrideLSPCommand();
+        }
+      });
+    }
   }
 };
 
