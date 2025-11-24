@@ -30,6 +30,31 @@ This extension replaces the stock LSP "jump to definition" command for Python no
 - Jedi: Runs `Script.goto()` with `follow_imports=True` using kernel's module search paths
 - Path resolution: Calculates server root from kernel CWD and notebook path
 
+## Fix Implementation Details
+
+The extension consists of frontend TypeScript code and backend Python code working together to provide kernel-aware jump-to-definition.
+
+**Frontend Implementation** (`src/index.ts`):
+
+- **Command Registration** (lines 46-235): Creates `notebook:jump-to-definition-kernel` command that collects notebook context and executes Jedi analysis
+- **Cell Source Collection** (lines 94-119): Iterates through all notebook cells, concatenates code cell sources, and calculates absolute cursor position accounting for multi-cell structure. Jedi requires 1-based line numbers
+- **Kernel Execution** (lines 124-148): Sends Jedi introspection code to kernel via `kernel.requestExecute()`, captures stdout (JSON result) while filtering stderr (debug logs)
+- **Path Conversion** (lines 174-208): Gets kernel's CWD, calculates JupyterLab server root from notebook path, converts absolute filesystem paths to server-relative paths for `docManager.openOrReveal()`
+- **Stock LSP Override** (lines 247-322): Dynamically intercepts `lsp:jump-to-definition` command when it loads, preserves original icon and label, routes Python notebooks to Jedi implementation while delegating others to stock LSP
+
+**Backend Implementation** (`jupyterlab_jump_to_definition_fix/routes.py`):
+
+- **Introspection Code Template** (lines 26-91): Provides Python code template executed in kernel environment that imports Jedi, creates `jedi.Project` with kernel's `sys.path`, runs `Script.goto()` with `follow_imports=True`, and returns JSON with file path and line number
+- **API Handler** (lines 15-24): Serves introspection code template to frontend via `/jupyterlab_jump_to_definition_fix/introspection-code` endpoint
+
+**Key Implementation Components**:
+
+- `jedi.Project(path=notebook_path, sys_path=sys.path)`: Creates Jedi project using kernel's module search paths for accurate resolution
+- `jedi.Script(...).goto(follow_imports=True)`: Performs static analysis to find symbol definitions, following import chains
+- `kernel.requestExecute()`: Executes Jedi code in kernel's Python environment where target packages are installed
+- IOPub message filtering: Separates stdout (JSON result) from stderr (debug output) for clean parsing
+- Path calculation: `kernelCwd.endsWith(notebookDir)` logic strips server root from absolute paths
+
 ## Features
 
 - **Replaces stock LSP**: Overrides `lsp:jump-to-definition` command for Python notebooks
