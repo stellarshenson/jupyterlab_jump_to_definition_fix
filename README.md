@@ -18,6 +18,7 @@ JupyterLab's built-in LSP "jump to definition" only works for packages installed
 This extension replaces the stock LSP "jump to definition" command for Python notebooks with a Jedi-based implementation that runs in the kernel's Python environment.
 
 **How it works**:
+
 - Executes Jedi static analysis directly in the notebook's kernel
 - Uses kernel's `sys.path` for module resolution, finding packages installed in kernel environment
 - Analyzes all notebook cells as concatenated source to understand full context
@@ -25,6 +26,7 @@ This extension replaces the stock LSP "jump to definition" command for Python no
 - Seamlessly overrides stock LSP command - same keyboard shortcut, same menu entry
 
 **Implementation details**:
+
 - Frontend: Collects all code cell sources, calculates cursor position across cells, sends to kernel
 - Backend: Provides Jedi introspection code template executed in kernel
 - Jedi: Runs `Script.goto()` with `follow_imports=True` using kernel's module search paths
@@ -71,6 +73,7 @@ The extension consists of frontend TypeScript code and backend Python code worki
 4. The source file will open at the definition location
 
 **Examples of symbols you can jump to:**
+
 - Module: `numpy` or `pandas`
 - Function: `np.array`, `pd.DataFrame`
 - Method: `MyClass.my_method`

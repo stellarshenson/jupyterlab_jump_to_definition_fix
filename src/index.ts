@@ -72,19 +72,13 @@ const plugin: JupyterFrontEndPlugin<void> = {
         // Get active cell and cursor position
         const activeCell = notebook.content.activeCell;
         if (!activeCell || activeCell.model.type !== 'code') {
-          await showErrorMessage(
-            'Jump to Definition',
-            'No active code cell'
-          );
+          await showErrorMessage('Jump to Definition', 'No active code cell');
           return;
         }
 
         const editor = activeCell.editor;
         if (!editor) {
-          await showErrorMessage(
-            'Jump to Definition',
-            'No editor available'
-          );
+          await showErrorMessage('Jump to Definition', 'No editor available');
           return;
         }
 
@@ -122,7 +116,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
         const notebookPath = notebook.context.path;
 
         // Get introspection code from server
-        const response = await requestAPI<{ code: string }>('introspection-code');
+        const response = await requestAPI<{ code: string }>(
+          'introspection-code'
+        );
 
         // Replace placeholders
         let jediCode = response.code
@@ -148,7 +144,11 @@ const plugin: JupyterFrontEndPlugin<void> = {
         await future.done;
 
         // Parse result
-        let result: { file: string | null; line: number | null; error: string | null };
+        let result: {
+          file: string | null;
+          line: number | null;
+          error: string | null;
+        };
         try {
           result = JSON.parse(output.trim());
         } catch (e) {
@@ -169,7 +169,12 @@ const plugin: JupyterFrontEndPlugin<void> = {
           return;
         }
 
-        console.log('[JumpToDef] Opening:', result.file, 'at line', result.line);
+        console.log(
+          '[JumpToDef] Opening:',
+          result.file,
+          'at line',
+          result.line
+        );
 
         // Convert absolute path to path relative to JupyterLab server root
         // Strategy: Get kernel's CWD and calculate server root from notebook path
@@ -193,10 +198,16 @@ const plugin: JupyterFrontEndPlugin<void> = {
         kernelCwd = kernelCwd.trim();
 
         // Calculate server root from notebook path
-        const notebookDir = notebookPath.substring(0, notebookPath.lastIndexOf('/'));
+        const notebookDir = notebookPath.substring(
+          0,
+          notebookPath.lastIndexOf('/')
+        );
         let serverRoot = kernelCwd;
         if (kernelCwd.endsWith(notebookDir)) {
-          serverRoot = kernelCwd.substring(0, kernelCwd.length - notebookDir.length);
+          serverRoot = kernelCwd.substring(
+            0,
+            kernelCwd.length - notebookDir.length
+          );
         }
 
         // Strip server root from definition file path
@@ -268,7 +279,10 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
       // Remove the stock command
       (app.commands as any)._commands.delete(stockLSPCommandId);
-      (app.commands as any)._commandChanged.emit({ id: stockLSPCommandId, type: 'removed' });
+      (app.commands as any)._commandChanged.emit({
+        id: stockLSPCommandId,
+        type: 'removed'
+      });
 
       // Re-register with our logic
       app.commands.addCommand(stockLSPCommandId, {
@@ -277,10 +291,13 @@ const plugin: JupyterFrontEndPlugin<void> = {
         execute: async (args?: any) => {
           // Check if we're in a Python notebook
           const notebook = notebookTracker.currentWidget;
-          if (notebook &&
-              notebook.sessionContext.session?.kernel &&
-              (notebook.sessionContext.kernelDisplayName === 'Python 3 (ipykernel)' ||
-               notebook.sessionContext.kernelDisplayName?.includes('Python'))) {
+          if (
+            notebook &&
+            notebook.sessionContext.session?.kernel &&
+            (notebook.sessionContext.kernelDisplayName ===
+              'Python 3 (ipykernel)' ||
+              notebook.sessionContext.kernelDisplayName?.includes('Python'))
+          ) {
             // Use our Jedi-based implementation
             return app.commands.execute(commandId);
           } else {
@@ -292,10 +309,13 @@ const plugin: JupyterFrontEndPlugin<void> = {
         },
         isEnabled: () => {
           const notebook = notebookTracker.currentWidget;
-          if (notebook &&
-              notebook.sessionContext.session?.kernel &&
-              (notebook.sessionContext.kernelDisplayName === 'Python 3 (ipykernel)' ||
-               notebook.sessionContext.kernelDisplayName?.includes('Python'))) {
+          if (
+            notebook &&
+            notebook.sessionContext.session?.kernel &&
+            (notebook.sessionContext.kernelDisplayName ===
+              'Python 3 (ipykernel)' ||
+              notebook.sessionContext.kernelDisplayName?.includes('Python'))
+          ) {
             // Use our isEnabled logic
             return true;
           } else {
