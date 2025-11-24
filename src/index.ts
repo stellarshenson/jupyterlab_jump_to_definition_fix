@@ -28,7 +28,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     palette: ICommandPalette | null
   ) => {
     console.log(
-      '[JumpToDef] Extension jupyterlab_jump_to_definition_fix is activated!'
+      'JupyterLab extension jupyterlab_jump_to_definition_fix is activated!'
     );
 
     // Test server extension (silent check)
