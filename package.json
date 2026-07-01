@@ -1,6 +1,6 @@
 {
     "name": "jupyterlab_jump_to_definition_fix",
-    "version": "1.0.67",
+    "version": "1.0.68",
     "description": "Jupyterlab fix disguised as extension to fix action 'jump to definition' from notebook to the source file / definition within the context of the notebook's kernel. Without the fix package would need to be installed in the same environment as jupyterlab to allo jump to definition",
     "keywords": [
         "jupyter",
@@ -41,7 +41,7 @@
         "clean:labextension": "rimraf jupyterlab_jump_to_definition_fix/labextension jupyterlab_jump_to_definition_fix/_version.py",
         "clean:all": "jlpm clean:lib && jlpm clean:labextension && jlpm clean:lintcache",
         "eslint": "jlpm eslint:check --fix",
-        "eslint:check": "eslint . --cache --ext .ts,.tsx",
+        "eslint:check": "eslint . --cache",
         "install:extension": "jlpm build",
         "lint": "jlpm stylelint && jlpm prettier && jlpm eslint",
         "lint:check": "jlpm stylelint:check && jlpm prettier:check && jlpm eslint:check",
@@ -64,18 +64,19 @@
         "@jupyterlab/services": "^7.0.0"
     },
     "devDependencies": {
+        "@eslint/js": "^9.0.0",
+        "@jupyter/eslint-plugin": "^0.0.5",
         "@jupyterlab/builder": "^4.0.0",
         "@jupyterlab/testutils": "^4.0.0",
         "@types/jest": "^29.2.0",
         "@types/json-schema": "^7.0.11",
         "@types/react": "^18.0.26",
         "@types/react-addons-linked-state-mixin": "^0.14.22",
-        "@typescript-eslint/eslint-plugin": "^6.1.0",
-        "@typescript-eslint/parser": "^6.1.0",
         "css-loader": "^6.7.1",
-        "eslint": "^8.36.0",
-        "eslint-config-prettier": "^8.8.0",
+        "eslint": "^9.0.0",
+        "eslint-config-prettier": "^9.0.0",
         "eslint-plugin-prettier": "^5.0.0",
+        "globals": "^15.0.0",
         "jest": "^29.2.0",
         "mkdirp": "^1.0.3",
         "npm-run-all2": "^7.0.1",
@@ -89,6 +90,7 @@
         "stylelint-csstree-validator": "^3.0.0",
         "stylelint-prettier": "^4.0.0",
         "typescript": "~5.8.0",
+        "typescript-eslint": "^8.0.0",
         "yjs": "^13.5.0"
     },
     "sideEffects": [
