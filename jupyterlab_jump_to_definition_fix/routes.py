@@ -29,9 +29,10 @@ class IntrospectionCodeHandler(APIHandler):
         # Use Jedi for static analysis in kernel's environment
         introspection_code = """
 import sys
+import os
 import json
 
-_result = {'file': None, 'line': None, 'error': None}
+_result = {'file': None, 'line': None, 'error': None, 'in_notebook': False}
 
 try:
     # Import Jedi
@@ -73,8 +74,15 @@ try:
         print(f'[Jedi] Definition: {_defn.name} at {_defn.module_path}:{_defn.line}', file=sys.stderr)
 
         if _defn.module_path:
-            _result['file'] = str(_defn.module_path)
+            _defn_path = str(_defn.module_path)
+            _result['file'] = _defn_path
             _result['line'] = _defn.line if _defn.line else 1
+            # In-notebook definition: Jedi resolved the symbol to the notebook's
+            # own concatenated source. Detect it here, inside the kernel, where the
+            # real cwd lives, so the front end can jump in place instead of
+            # reconstructing a filesystem path (which doubles when cwd == notebook dir).
+            if _notebook_path and os.path.abspath(_notebook_path) == os.path.abspath(_defn_path):
+                _result['in_notebook'] = True
         else:
             _result['error'] = f'Definition found but no source file available (builtin or compiled module)'
     else:

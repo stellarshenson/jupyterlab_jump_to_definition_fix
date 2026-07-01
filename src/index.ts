@@ -148,6 +148,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
           file: string | null;
           line: number | null;
           error: string | null;
+          in_notebook?: boolean;
         };
         try {
           result = JSON.parse(output.trim());
@@ -166,6 +167,53 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
         if (!result.file) {
           await showErrorMessage('Jump to Definition', 'No definition found');
+          return;
+        }
+
+        // In-notebook definition: Jedi resolved the target to the notebook's own
+        // source. Jump within the already-open notebook rather than reconstructing
+        // a filesystem path (which doubles when the kernel cwd is the notebook's
+        // own directory) and re-opening the file. This is cwd-independent and
+        // matches jupyterlab-lsp's native behaviour.
+        if (result.in_notebook && result.line) {
+          // Map the absolute line (in the concatenated code-cell source) back to a
+          // code cell and a line within that cell - the exact inverse of the
+          // forward calculation above.
+          let remaining = result.line;
+          let targetIndex = -1;
+          let lineInCell = 0;
+          for (let i = 0; i < cells.length; i++) {
+            const cell = cells[i];
+            if (cell.model.type !== 'code') {
+              continue;
+            }
+            const lineCount =
+              cell.model.sharedModel.getSource().split('\n').length;
+            if (remaining <= lineCount) {
+              targetIndex = i;
+              lineInCell = remaining - 1;
+              break;
+            }
+            remaining -= lineCount;
+          }
+
+          if (targetIndex < 0) {
+            await showErrorMessage(
+              'Jump to Definition',
+              'Definition is in this notebook but its line could not be located'
+            );
+            return;
+          }
+
+          notebook.content.activeCellIndex = targetIndex;
+          notebook.content.mode = 'edit';
+          setTimeout(() => {
+            const targetEditor = notebook.content.activeCell?.editor;
+            if (targetEditor) {
+              targetEditor.setCursorPosition({ line: lineInCell, column: 0 });
+              targetEditor.focus();
+            }
+          }, 100);
           return;
         }
 
