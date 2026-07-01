@@ -28,7 +28,8 @@ This extension replaces the stock LSP "jump to definition" command for Python no
 - Executes Jedi static analysis directly in the notebook's kernel
 - Uses kernel's `sys.path` for module resolution, finding packages installed in kernel environment
 - Analyzes all notebook cells as concatenated source to understand full context
-- Converts absolute filesystem paths to JupyterLab-relative paths for file opening
+- Opens external definitions by converting absolute filesystem paths to JupyterLab-relative paths
+- Jumps in place for definitions inside the notebook itself - navigates to the defining cell without reopening a file
 - Seamlessly overrides stock LSP command - same keyboard shortcut, same menu entry
 
 **Implementation details**:
@@ -47,12 +48,13 @@ The extension consists of frontend TypeScript code and backend Python code worki
 - **Command Registration**: `app.commands.addCommand(commandId)` creates `notebook:jump-to-definition-kernel` command that collects notebook context and executes Jedi analysis
 - **Cell Source Collection**: Command execute function iterates through `notebook.content.widgets`, concatenates code cell sources, and calculates absolute cursor position accounting for multi-cell structure. Jedi requires 1-based line numbers
 - **Kernel Execution**: `kernel.requestExecute()` sends Jedi introspection code to kernel, `future.onIOPub` handler captures stdout (JSON result) while filtering stderr (debug logs)
-- **Path Conversion**: Secondary kernel execution gets CWD via `os.getcwd()`, calculates JupyterLab server root from notebook path, converts absolute filesystem paths to server-relative paths for `docManager.openOrReveal()`
+- **Path Conversion**: For external definitions, a secondary kernel execution gets CWD via `os.getcwd()`, calculates the JupyterLab server root from the notebook path, and converts absolute filesystem paths to server-relative paths for `docManager.openOrReveal()`
+- **In-notebook Navigation**: When the definition resolves to the notebook's own source, the absolute line is mapped back to a (cell, line) and the cursor moves there via the notebook API instead of reopening a file - this avoids a path-doubling 404 that occurred when the kernel CWD equalled the notebook's directory
 - **Stock LSP Override**: `overrideLSPCommand()` function dynamically intercepts `lsp:jump-to-definition` command when it loads, preserves original icon and label, routes Python notebooks to Jedi implementation while delegating others to stock LSP
 
 **Backend Implementation** (`jupyterlab_jump_to_definition_fix/routes.py`):
 
-- **Introspection Code Template**: `IntrospectionCodeHandler.get()` method provides Python code template executed in kernel environment that imports Jedi, creates `jedi.Project` with kernel's `sys.path`, runs `Script.goto()` with `follow_imports=True`, and returns JSON with file path and line number
+- **Introspection Code Template**: `IntrospectionCodeHandler.get()` method provides Python code template executed in kernel environment that imports Jedi, creates `jedi.Project` with kernel's `sys.path`, runs `Script.goto()` with `follow_imports=True`, and returns JSON with file path, line number, and an `in_notebook` flag set when the definition resolves to the notebook's own source (compared in-kernel, so cwd-independent)
 - **API Handler**: Route registered at `/jupyterlab_jump_to_definition_fix/introspection-code` endpoint serves template to frontend
 
 **Key Implementation Components**:
@@ -76,7 +78,7 @@ The extension consists of frontend TypeScript code and backend Python code worki
 1. Open a Jupyter notebook with a Python kernel
 2. Place your cursor on or select a symbol (function name, class name, module attribute, etc.)
 3. Press `Ctrl+B` (or `Cmd+B` on Mac), or run "Jump to Definition (Kernel Context)" from the command palette
-4. The source file will open at the definition location
+4. The source file opens at the definition location - or, for a symbol defined in the notebook itself, the cursor jumps to the defining cell
 
 **Examples of symbols you can jump to:**
 
