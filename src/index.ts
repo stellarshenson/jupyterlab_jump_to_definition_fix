@@ -32,12 +32,14 @@ const plugin: JupyterFrontEndPlugin<void> = {
     );
 
     // Test server extension (silent check)
-    requestAPI<any>('hello', app.serviceManager.serverSettings).catch(reason => {
-      console.error(
-        '[JumpToDef] The server extension appears to be missing:',
-        reason
-      );
-    });
+    requestAPI<any>('hello', app.serviceManager.serverSettings).catch(
+      reason => {
+        console.error(
+          '[JumpToDef] The server extension appears to be missing:',
+          reason
+        );
+      }
+    );
 
     // Store reference to stock LSP command ID
     const stockLSPCommandId = 'lsp:jump-to-definition';
@@ -122,7 +124,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         );
 
         // Replace placeholders
-        let jediCode = response.code
+        const jediCode = response.code
           .replace('__NOTEBOOK_SOURCE__', JSON.stringify(notebookSource))
           .replace('__CURSOR_LINE__', String(absoluteLine))
           .replace('__CURSOR_COLUMN__', String(absoluteColumn))
@@ -188,8 +190,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
             if (cell.model.type !== 'code') {
               continue;
             }
-            const lineCount =
-              cell.model.sharedModel.getSource().split('\n').length;
+            const lineCount = cell.model.sharedModel
+              .getSource()
+              .split('\n').length;
             if (remaining <= lineCount) {
               targetIndex = i;
               lineInCell = remaining - 1;

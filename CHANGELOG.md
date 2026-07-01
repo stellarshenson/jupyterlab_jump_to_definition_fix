@@ -4,6 +4,15 @@
 
 <!-- <END NEW CHANGELOG ENTRY> -->
 
+## v1.0.68
+
+- Fixed in-notebook jump-to-definition 404: Jedi doubled the notebook's own directory when the kernel cwd equalled it, producing a path the contents API could not open
+- Fixed cursor landing on the wrong cell for definitions resolved within the notebook
+- In-notebook definitions are now detected server-side (in-kernel, so cwd-independent) and navigated in place via the notebook API instead of reconstructing a path and reopening the file
+- Switched `tsconfig.json` `moduleResolution` from node to bundler so `@jupyterlab/lsp` type declarations resolve during build
+- Adopted canonical Makefile v1.32 (project-local `.nodeenv`)
+- Updated to jupyterlab extension-template v4.6.2
+
 ## v1.0.60
 
 - Comprehensive README with badges (GitHub Actions, npm, PyPI, PyPI downloads, JupyterLab 4, KOLOMOLO)
