@@ -4,6 +4,12 @@
 
 <!-- <END NEW CHANGELOG ENTRY> -->
 
+## v1.0.69
+
+- Fixed the extension build under PEP 517 isolation and CI: `build:labextension` now uses the `jupyter-builder` CLI instead of `jupyter labextension build`, which required the full jupyterlab package and failed with `ModuleNotFoundError: No module named 'jupyterlab'`
+- Migrated the lint toolchain to eslint 9 flat config (eslint 9, `typescript-eslint`, `@jupyter/eslint-plugin`) to match extension-template v4.6.2
+- Documented in-notebook navigation and the server-side `in_notebook` flag in the README
+
 ## v1.0.68
 
 - Fixed in-notebook jump-to-definition 404: Jedi doubled the notebook's own directory when the kernel cwd equalled it, producing a path the contents API could not open
