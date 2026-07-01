@@ -32,7 +32,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     );
 
     // Test server extension (silent check)
-    requestAPI<any>('hello').catch(reason => {
+    requestAPI<any>('hello', app.serviceManager.serverSettings).catch(reason => {
       console.error(
         '[JumpToDef] The server extension appears to be missing:',
         reason
@@ -117,7 +117,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
         // Get introspection code from server
         const response = await requestAPI<{ code: string }>(
-          'introspection-code'
+          'introspection-code',
+          app.serviceManager.serverSettings
         );
 
         // Replace placeholders
